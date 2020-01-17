@@ -1,0 +1,57 @@
+---
+- set_fact:
+    default_interface:
+      name: default
+      address: '{{ (net_interfaces | selectattr("name", "equalto", "default") | first).address }}'
+
+- name: 'linstor node list'
+  uri:
+    url: 'http://{{ linstor_controller }}/v1/nodes?nodes={{ node_name }}'
+  register: node_list
+
+- name: 'linstor node create'
+  uri:
+    url: 'http://{{ linstor_controller }}/v1/nodes'
+    method: POST
+    body_format: json
+    status_code: 200, 201
+    body: '{"net_interfaces": [{"satellite_port": {{ satellite_port }}, "satellite_encryption_type": "{{ satellite_encryption_type }}", "name": "default", "address": "{{ default_interface.address }}"}], "type": "{{ type }}", "name": "{{ node_name }}"}'
+  when: "node_list.json | length == 0"
+  changed_when: true
+
+- name: 'linstor node interface create'
+  uri:
+    url: 'http://{{ linstor_controller }}/v1/nodes/{{ node_name }}/net-interfaces'
+    method: POST
+    body_format: json
+    status_code: 200, 201
+    body: '{"name": "{{ item.name }}", "address": "{{ item.address }}"}'
+  when: "item.name != 'default' and filtered_interfaces | length == 0"
+  changed_when: true
+  vars:
+    filtered_interfaces: '{{ node_list.json[0].net_interfaces | default([default_interface]) | selectattr("name", "equalto", item.name) | list }}'
+  loop: '{{ net_interfaces }}'
+
+- name: 'linstor node interface modify address'
+  uri:
+    url: 'http://{{ linstor_controller }}/v1/nodes/{{ node_name }}/net-interfaces/{{ item.name }}'
+    method: PUT
+    body_format: json
+    status_code: 200, 201
+    body: '{"name": "{{ item.name }}", "address": "{{ item.address }}"}'
+  when: "filtered_interfaces | length != 0 and filtered_interfaces[0].address != item.address"
+  changed_when: true
+  vars:
+    filtered_interfaces: '{{ node_list.json[0].net_interfaces | default([default_interface]) | selectattr("name", "equalto", item.name) | list }}'
+  loop: '{{ net_interfaces }}'
+
+- name: 'linstor node set-properties'
+  uri:
+    url: 'http://{{ linstor_controller }}/v1/nodes/{{ node_name }}'
+    method: PUT
+    body_format: json
+    status_code: 200, 201
+    body: '{"override_props": {"{{ item.name }}": "{{ item.value }}"}}'
+  when: 'node_list.json[0].props is not defined or node_list.json[0].props[item.name] is not defined or node_list.json[0].props[item.name] != item.value'
+  changed_when: true
+  loop: '{{ properties }}'

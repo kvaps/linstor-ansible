@@ -1,0 +1,127 @@
+- hosts: localhost
+  gather_facts: no
+  vars:
+    linstor_controller: localhost:3370
+  tasks:
+
+  #--------------------------------------------
+  # Controller properties
+  #--------------------------------------------
+  - import_role:
+      name: linstor_controller
+    vars:
+      properties:
+      - name: DrbdOptions/Net/after-sb-0pri
+        value: disconnect
+      - name: DrbdOptions/Net/after-sb-1pri
+        value: disconnect
+      - name: DrbdOptions/Net/after-sb-2pri
+        value: disconnect
+      - name: DrbdOptions/Net/csums-alg
+        value: crc32
+      - name: DrbdOptions/Net/verify-alg
+        value: crc32
+      - name: DrbdOptions/Net/max-buffers
+        value: "36864"
+      - name: DrbdOptions/Net/protocol
+        value: C
+      - name: DrbdOptions/Net/rcvbuf-size
+        value: "2097152"
+      - name: DrbdOptions/Net/sndbuf-size
+        value: "1048576"
+      - name: DrbdOptions/PeerDevice/c-fill-target
+        value: "10240"
+      - name: DrbdOptions/PeerDevice/c-max-rate
+        value: "737280"
+      - name: DrbdOptions/PeerDevice/c-min-rate
+        value: "20480"
+      - name: DrbdOptions/PeerDevice/c-plan-ahead
+        value: "10"
+
+  #--------------------------------------------
+  # Nodes with extra properties
+  #--------------------------------------------
+  - import_role:
+      name: linstor_node
+    vars:
+      node_name: node5
+      net_interfaces:
+      - address: 10.10.11.5
+        name: default
+      - address: 10.12.11.5
+        name: data
+      properties:
+      - name: Aux/region
+        value: "abc"
+  
+  #--------------------------------------------
+  # Storage Pools
+  #--------------------------------------------
+  - import_role:
+      name: linstor_storage_pool
+    vars:
+      node_name: node5
+      storage_pool_name: diskless
+      provider_kind: DISKLESS
+
+  - import_role:
+      name: linstor_storage_pool
+    vars:
+      node_name: node5
+      storage_pool_name: lvm
+      provider_kind: LVM
+      properties:
+      - name: StorDriver/LvmVg
+        value: "data"
+
+  - import_role:
+      name: linstor_storage_pool
+    vars:
+      node_name: node5
+      storage_pool_name: lvmthin
+      provider_kind: LVM_THIN
+      properties:
+      - name: StorDriver/LvmVg
+        value: "data"
+      - name: StorDriver/ThinPool
+        value: "thinpool"
+
+  - import_role:
+      name: linstor_storage_pool
+    vars:
+      node_name: node5
+      storage_pool_name: zfs
+      provider_kind: ZFS
+      properties:
+      - name: StorDriver/ZPool
+        value: "tank/data"
+
+  - import_role:
+      name: linstor_storage_pool
+    vars:
+      node_name: node5
+      storage_pool_name: zfsthin
+      provider_kind: ZFS_THIN
+      properties:
+      - name: StorDriver/ZPoolThin
+        value: "tank/data"
+
+  - import_role:
+      name: linstor_storage_pool
+    vars:
+      node_name: node5
+      storage_pool_name: file
+      provider_kind: FILE
+      properties:
+      - name: StorDriver/FileDir
+        value: "/data/dir"
+
+  - import_role:
+      name: linstor_storage_pool
+    vars:
+      node_name: node5
+      storage_pool_name: filethin
+      provider_kind: FILE_THIN
+      properties:
+      - name: StorDriver/FileDir
+        value: "/data/dir"
