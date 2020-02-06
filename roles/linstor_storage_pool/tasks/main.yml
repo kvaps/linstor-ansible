@@ -1,7 +1,7 @@
 ---
 - name: 'linstor storage-pool list'
   uri:
-    url: 'http://{{ linstor_controller }}/v1/view/storage-pools?nodes={{ node_name }}&storagepools={{ storage_pool_name }}'
+    url: 'http://{{ linstor_controller }}/v1/view/storage-pools?nodes={{ node_name }}&storage_pools={{ storage_pool_name }}'
   register: storage_pool_list
 
 - set_fact:
@@ -12,7 +12,7 @@
         {% if provider_kind in ['LVM', 'LVM_THIN', 'SPDK'] %}
         StorDriver/LvmVg: '{{ (properties | selectattr("name", "equalto", "StorDriver/LvmVg") | first).value }}'
         {% endif %}
-        {% if provider_kind == 'LVM_THIN' %}
+        {% if provider_kind == 'LVM_THIN' %},
         StorDriver/ThinPool: '{{ (properties | selectattr("name", "equalto", "StorDriver/ThinPool") | first).value }}',
         {% elif provider_kind == 'ZFS' %}
         StorDriver/ZPool: '{{ (properties | selectattr("name", "equalto", "StorDriver/ZPool") | first).value }}'
