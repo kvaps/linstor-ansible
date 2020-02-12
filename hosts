@@ -1,0 +1,2 @@
+localhost ansible_connection=docker ansible_host=linstor
+

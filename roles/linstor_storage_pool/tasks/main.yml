@@ -13,7 +13,7 @@
         StorDriver/LvmVg: '{{ (properties | selectattr("name", "equalto", "StorDriver/LvmVg") | first).value }}'
         {% endif %}
         {% if provider_kind == 'LVM_THIN' %},
-        StorDriver/ThinPool: '{{ (properties | selectattr("name", "equalto", "StorDriver/ThinPool") | first).value }}',
+        StorDriver/ThinPool: '{{ (properties | selectattr("name", "equalto", "StorDriver/ThinPool") | first).value }}'
         {% elif provider_kind == 'ZFS' %}
         StorDriver/ZPool: '{{ (properties | selectattr("name", "equalto", "StorDriver/ZPool") | first).value }}'
         {% elif provider_kind == 'ZFS_THIN' %}
